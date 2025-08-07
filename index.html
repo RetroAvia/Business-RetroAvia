@@ -315,6 +315,11 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
         
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
         .quick-actions {
             display: flex;
             flex-wrap: wrap;
@@ -412,7 +417,7 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: var(--radius-xl);
             padding: var(--space-8);
-            max-width: 600px;
+            max-width: 800px;
             width: 90%;
             position: relative;
             max-height: 85vh;
@@ -596,6 +601,97 @@
             text-align: center;
             padding: var(--space-1);
         }
+
+        /* Order Status Styles */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-lg);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .status-in-progress {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .status-completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .status-cancelled {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+
+        /* Form Grid for Orders */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .form-grid-full {
+            grid-column: 1 / -1;
+        }
+
+        /* Order Details Card */
+        .order-details {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            margin: var(--space-4) 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .order-details h4 {
+            color: var(--primary);
+            margin-bottom: var(--space-4);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .order-spec {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-2) 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .order-spec:last-child {
+            border-bottom: none;
+        }
+
+        .spec-label {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .spec-value {
+            color: var(--text-primary);
+            font-weight: 600;
+            text-align: right;
+            max-width: 60%;
+            word-wrap: break-word;
+        }
         
         @media (max-width: 768px) {
             .container { 
@@ -640,6 +736,14 @@
             .data-table td {
                 padding: var(--space-2);
             }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .spec-value {
+                max-width: 50%;
+            }
         }
         
         @media (max-width: 480px) {
@@ -661,6 +765,11 @@
             .confirm-actions {
                 flex-direction: column;
             }
+
+            .spec-value {
+                max-width: 40%;
+                font-size: 0.875rem;
+            }
         }
     </style>
 </head>
@@ -678,6 +787,9 @@
         <nav class="nav" role="navigation" aria-label="Main navigation">
             <button class="nav-btn active" onclick="showPage('dashboard')" aria-label="Dashboard">
                 <span>📊</span> Dashboard
+            </button>
+            <button class="nav-btn" onclick="showPage('orders')" aria-label="Ordini">
+                <span>📋</span> Ordini
             </button>
             <button class="nav-btn" onclick="showPage('transactions')" aria-label="Transazioni">
                 <span>💰</span> Transazioni
@@ -739,6 +851,9 @@
                     <button class="btn btn-success" onclick="openQuickSale()">
                         <span>💰</span> Vendita Rapida
                     </button>
+                    <button class="btn btn-warning" onclick="openQuickOrder()">
+                        <span>📋</span> Nuovo Ordine
+                    </button>
                     <button class="btn btn-warning" onclick="openQuickClient()">
                         <span>👤</span> Cliente Rapido
                     </button>
@@ -748,6 +863,22 @@
                     <button class="btn btn-secondary" onclick="exportBackup()">
                         <span>💾</span> Backup
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Page -->
+        <div class="page" id="orders" role="main">
+            <div class="card">
+                <h3><span>📋</span> Gestione Ordini</h3>
+                <div class="quick-actions">
+                    <button class="btn btn-success" onclick="addOrder()">
+                        <span>📋</span> Nuovo Ordine
+                    </button>
+                </div>
+                <input type="text" class="search-box" id="orderSearch" placeholder="🔍 Cerca ordini..." aria-label="Cerca ordini">
+                <div id="ordersContainer">
+                    <!-- Orders will be loaded here -->
                 </div>
             </div>
         </div>
@@ -868,6 +999,54 @@
     <script>
         // ===== GLOBAL STATE =====
         let appData = {
+            orders: [
+                { 
+                    id: 'order1', 
+                    clientName: 'Mario Rossi',
+                    clientEmail: 'mario.rossi@email.com',
+                    status: 'in-progress',
+                    createdDate: '2025-01-20',
+                    dueDate: '2025-02-15',
+                    specs: {
+                        modello: 'Game Boy Classic',
+                        scocca: 'Trasparente blu con glitter',
+                        pulsanti: 'Rossi personalizzati',
+                        etichetta: 'Etichetta Pokémon custom',
+                        batteria: 'Ricaricabile USB-C',
+                        audio: 'Speaker amplificato',
+                        display: 'IPS backlight mod',
+                        kitLed: 'LED multicolore con switch',
+                        box: 'Box originale restaurato',
+                        cover: 'Cover protettiva in silicone',
+                        gameBoyCliente: 'Console fornita dal cliente',
+                        altro: 'Porta cartucce custom',
+                        note: 'Cliente vuole setup gaming retrò completo per collezione'
+                    }
+                },
+                { 
+                    id: 'order2', 
+                    clientName: 'Giulia Bianchi',
+                    clientEmail: 'giulia.bianchi@email.com', 
+                    status: 'pending',
+                    createdDate: '2025-01-22',
+                    dueDate: '2025-02-20',
+                    specs: {
+                        modello: 'Game Boy Color',
+                        scocca: 'Limited Edition Pikachu',
+                        pulsanti: 'Standard gialli',
+                        etichetta: 'Originale restaurata',
+                        batteria: 'Standard AA',
+                        audio: 'Standard',
+                        display: 'Schermo LCD nuovo',
+                        kitLed: 'Non richiesto',
+                        box: 'Non necessario',
+                        cover: 'Non richiesta',
+                        gameBoyCliente: 'Da acquistare',
+                        altro: 'Pulizia approfondita',
+                        note: 'Regalo per nipote, priorità sicurezza'
+                    }
+                }
+            ],
             transactions: [
                 { id: 'demo1', type: 'revenue', amount: 250, description: 'Vendita Game Boy Color ricondizionato', date: '2025-01-15', client: 'Mario Rossi' },
                 { id: 'demo2', type: 'expense', amount: 50, description: 'Componenti sostituzione schermo', date: '2025-01-14', client: '' },
@@ -1075,6 +1254,10 @@
                     case 'dashboard':
                         updateDashboard();
                         break;
+                    case 'orders':
+                        loadOrders();
+                        setTimeout(setupSearchListeners, 100);
+                        break;
                     case 'transactions':
                         loadTransactions();
                         setTimeout(setupSearchListeners, 100);
@@ -1152,6 +1335,461 @@
                 showMessage('Errore aggiornamento dashboard', 'error');
             }
         }
+
+        // ===== ORDERS FUNCTIONS =====
+        function loadOrders() {
+            const container = document.getElementById('ordersContainer');
+            if (!container) return;
+            
+            if (appData.orders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <h3>Nessun ordine</h3>
+                        <p>Inizia aggiungendo il tuo primo ordine personalizzato!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort orders by date (newest first)
+            const sortedOrders = [...appData.orders].sort((a, b) => 
+                new Date(b.createdDate) - new Date(a.createdDate)
+            );
+            
+            const tableHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Modello</th>
+                            <th>Stato</th>
+                            <th>Data Creazione</th>
+                            <th>Scadenza</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sortedOrders.map(order => {
+                            const statusClass = `status-${order.status}`;
+                            const statusText = {
+                                'pending': '⏳ In Attesa',
+                                'in-progress': '🔧 In Lavorazione', 
+                                'completed': '✅ Completato',
+                                'cancelled': '❌ Annullato'
+                            };
+                            
+                            return `
+                                <tr data-id="${order.id}">
+                                    <td><strong>${order.clientName}</strong></td>
+                                    <td>${order.specs.modello || '-'}</td>
+                                    <td>
+                                        <span class="status-badge ${statusClass}">
+                                            ${statusText[order.status] || order.status}
+                                        </span>
+                                    </td>
+                                    <td>${new Date(order.createdDate).toLocaleDateString('it-IT')}</td>
+                                    <td>${new Date(order.dueDate).toLocaleDateString('it-IT')}</td>
+                                    <td>
+                                        <button class="btn btn-secondary" onclick="viewOrder('${order.id}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin: 0.125rem;">
+                                            👁️ Vedi
+                                        </button>
+                                        <button class="btn btn-secondary" onclick="editOrder('${order.id}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin: 0.125rem;">
+                                            ✏️ Modifica
+                                        </button>
+                                        <button class="btn btn-error" onclick="confirmDeleteOrder('${order.id}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin: 0.125rem;">
+                                            🗑️ Elimina
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = tableHTML;
+            console.log('Orders loaded:', appData.orders.length);
+        }
+
+        function addOrder() {
+            const content = `
+                <h3 id="modalTitle" style="color: var(--accent); margin-bottom: var(--space-6);">📋 Nuovo Ordine</h3>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="orderClientName">Nome Cliente</label>
+                        <input type="text" id="orderClientName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="orderClientEmail">Email Cliente</label>
+                        <input type="email" id="orderClientEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="orderStatus">Stato</label>
+                        <select id="orderStatus" required>
+                            <option value="pending">⏳ In Attesa</option>
+                            <option value="in-progress">🔧 In Lavorazione</option>
+                            <option value="completed">✅ Completato</option>
+                            <option value="cancelled">❌ Annullato</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="orderDueDate">Data Scadenza</label>
+                        <input type="date" id="orderDueDate" required>
+                    </div>
+                </div>
+
+                <h4 style="color: var(--primary); margin: var(--space-6) 0 var(--space-4); display: flex; align-items: center; gap: var(--space-2);">
+                    🎮 Specifiche Game Boy
+                </h4>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="specModello">Modello Game Boy</label>
+                        <input type="text" id="specModello" placeholder="es. Game Boy Classic, Color, Advance...">
+                    </div>
+                    <div class="form-group">
+                        <label for="specScocca">Scocca</label>
+                        <input type="text" id="specScocca" placeholder="es. Trasparente, Colorata, Custom...">
+                    </div>
+                    <div class="form-group">
+                        <label for="specPulsanti">Pulsanti</label>
+                        <input type="text" id="specPulsanti" placeholder="es. Originali, Custom, Colorati...">
+                    </div>
+                    <div class="form-group">
+                        <label for="specEtichetta">Etichetta</label>
+                        <input type="text" id="specEtichetta" placeholder="es. Originale, Custom, Restaurata...">
+                    </div>
+                    <div class="form-group">
+                        <label for="specBatteria">Batteria</label>
+                        <input type="text" id="specBatteria" placeholder="es. Standard AA, Ricaricabile USB-C...">
+                    </div>
+                    <div class="form-group">
+                        <label for="specAudio">Audio</label>
+                        <input type="text" id="specAudio" placeholder="es. Standard, Amplificato, Pro Sound...">
+                    </div>
+                    <div class="form-group">
+                        <label for="specDisplay">Display</label>
+                        <input type="text" id="specDisplay" placeholder="es. Originale, IPS, Backlight mod...">
+                    </div>
+                    <div class="form-group">
+                        <label for="specKitLed">Kit LED</label>
+                        <input type="text" id="specKitLed" placeholder="es. Nessuno, LED bianchi, RGB...">
+                    </div>
+                    <div class="form-group">
+                        <label for="specBox">Box</label>
+                        <input type="text" id="specBox" placeholder="es. Originale, Riproduzione, Custom...">
+                    </div>
+                    <div class="form-group">
+                        <label for="specCover">Cover</label>
+                        <input type="text" id="specCover" placeholder="es. Silicone, Rigida, Personalizzata...">
+                    </div>
+                    <div class="form-group">
+                        <label for="specGameBoyCliente">Game Boy Cliente</label>
+                        <input type="text" id="specGameBoyCliente" placeholder="es. Fornito dal cliente, Da acquistare...">
+                    </div>
+                    <div class="form-group">
+                        <label for="specAltro">Altro</label>
+                        <input type="text" id="specAltro" placeholder="es. Accessori extra, Modifiche speciali...">
+                    </div>
+                    <div class="form-group form-grid-full">
+                        <label for="specNote">Note</label>
+                        <textarea id="specNote" placeholder="Note aggiuntive, richieste speciali, dettagli importanti..."></textarea>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <button type="button" class="btn btn-success" onclick="saveOrderFromForm()" id="saveOrderBtn">
+                        <span>💾</span> Salva Ordine
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">
+                        <span>❌</span> Annulla
+                    </button>
+                </div>
+            `;
+            openModal(content);
+
+            // Set default due date (2 weeks from now)
+            setTimeout(() => {
+                const dueDateField = document.getElementById('orderDueDate');
+                if (dueDateField) {
+                    const defaultDate = new Date();
+                    defaultDate.setDate(defaultDate.getDate() + 14);
+                    dueDateField.value = formatDate(defaultDate);
+                }
+            }, 100);
+        }
+
+        function saveOrderFromForm() {
+            try {
+                const saveBtn = document.getElementById('saveOrderBtn');
+                const originalText = '<span>💾</span> Salva Ordine';
+                
+                showLoading(saveBtn, 'Salvando...');
+                
+                const clientName = document.getElementById('orderClientName')?.value;
+                const clientEmail = document.getElementById('orderClientEmail')?.value;
+                const status = document.getElementById('orderStatus')?.value;
+                const dueDate = document.getElementById('orderDueDate')?.value;
+                
+                if (!clientName || !clientEmail || !status || !dueDate) {
+                    hideLoading(saveBtn, originalText);
+                    showMessage('Compila tutti i campi obbligatori', 'error');
+                    return;
+                }
+                
+                // Validate email format
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(clientEmail)) {
+                    hideLoading(saveBtn, originalText);
+                    showMessage('Formato email non valido', 'error');
+                    return;
+                }
+                
+                // Validate due date
+                const selectedDate = new Date(dueDate);
+                const today = new Date();
+                if (selectedDate <= today) {
+                    hideLoading(saveBtn, originalText);
+                    showMessage('La data di scadenza deve essere nel futuro', 'error');
+                    return;
+                }
+                
+                setTimeout(() => {
+                    const specs = {
+                        modello: document.getElementById('specModello')?.value || '',
+                        scocca: document.getElementById('specScocca')?.value || '',
+                        pulsanti: document.getElementById('specPulsanti')?.value || '',
+                        etichetta: document.getElementById('specEtichetta')?.value || '',
+                        batteria: document.getElementById('specBatteria')?.value || '',
+                        audio: document.getElementById('specAudio')?.value || '',
+                        display: document.getElementById('specDisplay')?.value || '',
+                        kitLed: document.getElementById('specKitLed')?.value || '',
+                        box: document.getElementById('specBox')?.value || '',
+                        cover: document.getElementById('specCover')?.value || '',
+                        gameBoyCliente: document.getElementById('specGameBoyCliente')?.value || '',
+                        altro: document.getElementById('specAltro')?.value || '',
+                        note: document.getElementById('specNote')?.value || ''
+                    };
+
+                    const formData = {
+                        id: appData.editingId || generateId(),
+                        clientName: clientName,
+                        clientEmail: clientEmail,
+                        status: status,
+                        createdDate: appData.editingId ? 
+                            appData.orders.find(o => o.id === appData.editingId)?.createdDate || formatDate() : 
+                            formatDate(),
+                        dueDate: dueDate,
+                        specs: specs
+                    };
+                    
+                    if (appData.editingId) {
+                        const index = appData.orders.findIndex(o => o.id === appData.editingId);
+                        if (index !== -1) {
+                            appData.orders[index] = formData;
+                            showMessage('Ordine aggiornato con successo!');
+                            console.log('Order updated:', formData);
+                        }
+                        appData.editingId = null;
+                    } else {
+                        appData.orders.push(formData);
+                        showMessage('Ordine aggiunto con successo!');
+                        console.log('Order added:', formData);
+                    }
+                    
+                    hideLoading(saveBtn, originalText);
+                    closeModal();
+                    loadOrders();
+                    updateDashboard();
+                    autoSave();
+                }, 500);
+                
+            } catch (error) {
+                console.error('Save order error:', error);
+                showMessage('Errore nel salvataggio ordine', 'error');
+            }
+        }
+
+        function viewOrder(id) {
+            const order = appData.orders.find(o => o.id === id);
+            if (!order) {
+                showMessage('Ordine non trovato', 'error');
+                return;
+            }
+
+            const statusText = {
+                'pending': '⏳ In Attesa',
+                'in-progress': '🔧 In Lavorazione', 
+                'completed': '✅ Completato',
+                'cancelled': '❌ Annullato'
+            };
+
+            const statusClass = `status-${order.status}`;
+
+            const content = `
+                <h3 id="modalTitle" style="color: var(--accent); margin-bottom: var(--space-6);">
+                    👁️ Dettagli Ordine - ${order.clientName}
+                </h3>
+                
+                <div class="order-details">
+                    <h4>📋 Informazioni Generali</h4>
+                    <div class="order-spec">
+                        <span class="spec-label">Cliente:</span>
+                        <span class="spec-value"><strong>${order.clientName}</strong></span>
+                    </div>
+                    <div class="order-spec">
+                        <span class="spec-label">Email:</span>
+                        <span class="spec-value">${order.clientEmail}</span>
+                    </div>
+                    <div class="order-spec">
+                        <span class="spec-label">Stato:</span>
+                        <span class="spec-value">
+                            <span class="status-badge ${statusClass}">
+                                ${statusText[order.status] || order.status}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="order-spec">
+                        <span class="spec-label">Data Creazione:</span>
+                        <span class="spec-value">${new Date(order.createdDate).toLocaleDateString('it-IT')}</span>
+                    </div>
+                    <div class="order-spec">
+                        <span class="spec-label">Scadenza:</span>
+                        <span class="spec-value">${new Date(order.dueDate).toLocaleDateString('it-IT')}</span>
+                    </div>
+                </div>
+
+                <div class="order-details">
+                    <h4>🎮 Specifiche Game Boy</h4>
+                    ${Object.entries(order.specs).map(([key, value]) => {
+                        if (!value) return '';
+                        
+                        const labels = {
+                            modello: 'Modello Game Boy',
+                            scocca: 'Scocca',
+                            pulsanti: 'Pulsanti',
+                            etichetta: 'Etichetta',
+                            batteria: 'Batteria',
+                            audio: 'Audio',
+                            display: 'Display',
+                            kitLed: 'Kit LED',
+                            box: 'Box',
+                            cover: 'Cover',
+                            gameBoyCliente: 'Game Boy Cliente',
+                            altro: 'Altro',
+                            note: 'Note'
+                        };
+                        
+                        return `
+                            <div class="order-spec">
+                                <span class="spec-label">${labels[key] || key}:</span>
+                                <span class="spec-value">${value}</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+
+                <div class="quick-actions">
+                    <button type="button" class="btn btn-warning" onclick="editOrder('${order.id}'); closeModal();">
+                        <span>✏️</span> Modifica
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">
+                        <span>✅</span> Chiudi
+                    </button>
+                </div>
+            `;
+            
+            openModal(content);
+        }
+
+        function editOrder(id) {
+            console.log('Editing order with ID:', id);
+            const order = appData.orders.find(o => o.id === id);
+            if (!order) {
+                showMessage('Ordine non trovato', 'error');
+                console.error('Order not found:', id);
+                return;
+            }
+            
+            appData.editingId = id;
+            addOrder();
+            
+            // Populate form with existing data
+            setTimeout(() => {
+                const fields = {
+                    orderClientName: order.clientName,
+                    orderClientEmail: order.clientEmail,
+                    orderStatus: order.status,
+                    orderDueDate: order.dueDate,
+                    specModello: order.specs.modello,
+                    specScocca: order.specs.scocca,
+                    specPulsanti: order.specs.pulsanti,
+                    specEtichetta: order.specs.etichetta,
+                    specBatteria: order.specs.batteria,
+                    specAudio: order.specs.audio,
+                    specDisplay: order.specs.display,
+                    specKitLed: order.specs.kitLed,
+                    specBox: order.specs.box,
+                    specCover: order.specs.cover,
+                    specGameBoyCliente: order.specs.gameBoyCliente,
+                    specAltro: order.specs.altro,
+                    specNote: order.specs.note
+                };
+
+                Object.entries(fields).forEach(([fieldId, value]) => {
+                    const element = document.getElementById(fieldId);
+                    if (element && value) {
+                        element.value = value;
+                    }
+                });
+            }, 100);
+        }
+
+        function confirmDeleteOrder(id) {
+            console.log('Confirming delete for order:', id);
+            const order = appData.orders.find(o => o.id === id);
+            if (!order) {
+                showMessage('Ordine non trovato', 'error');
+                return;
+            }
+            
+            showConfirmDialog(
+                'Elimina Ordine',
+                `Sei sicuro di voler eliminare l'ordine per "${order.clientName}"? Questa azione non può essere annullata.`,
+                () => deleteOrder(id)
+            );
+        }
+
+        function deleteOrder(id) {
+            console.log('Deleting order with ID:', id);
+            console.log('Orders before delete:', appData.orders.length);
+            
+            const initialLength = appData.orders.length;
+            appData.orders = appData.orders.filter(o => o.id !== id);
+            
+            if (appData.orders.length < initialLength) {
+                console.log('Order deleted successfully. New count:', appData.orders.length);
+                showMessage('Ordine eliminato con successo!');
+                loadOrders();
+                updateDashboard();
+                autoSave();
+            } else {
+                console.error('Failed to delete order');
+                showMessage('Errore nell\'eliminazione dell\'ordine', 'error');
+            }
+        }
+
+        const debouncedFilterOrders = debounce(() => {
+            const searchTerm = document.getElementById('orderSearch')?.value.toLowerCase() || '';
+            const rows = document.querySelectorAll('#ordersContainer tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        }, 300);
         
         // ===== TRANSACTIONS FUNCTIONS =====
         function loadTransactions() {
@@ -2193,16 +2831,38 @@
         const SpiderAI = {
             analyze: function(data) {
                 const suggestions = [];
-                const { transactions = [], clients = [], inventory = [] } = data;
+                const { transactions = [], clients = [], inventory = [], orders = [] } = data;
                 
                 try {
                     const revenues = transactions.filter(t => t.type === 'revenue');
                     const totalRevenue = revenues.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
                     
-                    if (transactions.length === 0) {
-                        suggestions.push('🕷️ Spider-AI inizializzato! Aggiungi transazioni per analisi avanzate.');
+                    if (transactions.length === 0 && orders.length === 0) {
+                        suggestions.push('🕷️ Spider-AI inizializzato! Aggiungi transazioni e ordini per analisi avanzate.');
                         suggestions.push('🚀 Sistema pronto per machine learning sui tuoi dati business.');
                         return suggestions;
+                    }
+                    
+                    // Orders analysis
+                    if (orders.length > 0) {
+                        const pendingOrders = orders.filter(o => o.status === 'pending').length;
+                        const inProgressOrders = orders.filter(o => o.status === 'in-progress').length;
+                        
+                        if (pendingOrders > 0) {
+                            suggestions.push(`📋 ${pendingOrders} ordini in attesa - Prioritizza la pianificazione!`);
+                        }
+                        if (inProgressOrders > 0) {
+                            suggestions.push(`🔧 ${inProgressOrders} ordini in lavorazione - Mantieni il focus!`);
+                        }
+                        
+                        // Check for overdue orders
+                        const today = new Date();
+                        const overdueOrders = orders.filter(o => 
+                            new Date(o.dueDate) < today && o.status !== 'completed' && o.status !== 'cancelled'
+                        );
+                        if (overdueOrders.length > 0) {
+                            suggestions.push(`⚠️ ALERT: ${overdueOrders.length} ordini in ritardo! Contatta i clienti.`);
+                        }
                     }
                     
                     if (totalRevenue > 0) {
@@ -2268,9 +2928,9 @@
             },
             
             generatePredictions: function(data) {
-                const { transactions = [], clients = [], inventory = [] } = data;
+                const { transactions = [], clients = [], inventory = [], orders = [] } = data;
                 
-                if (transactions.length < 3) {
+                if (transactions.length < 3 && orders.length < 2) {
                     return [{
                         title: "🔮 Raccolta Dati in Corso",
                         description: "Il neural network necessita di più dati per generare predizioni accurate.",
@@ -2280,16 +2940,33 @@
                 
                 const predictions = [];
                 
+                // Orders workflow prediction
+                if (orders.length > 0) {
+                    const avgCompletionTime = 14; // Assumption based on sample data
+                    const inProgressOrders = orders.filter(o => o.status === 'in-progress').length;
+                    const pendingOrders = orders.filter(o => o.status === 'pending').length;
+                    
+                    if (inProgressOrders > 0 || pendingOrders > 0) {
+                        predictions.push({
+                            title: "📋 Gestione Ordini",
+                            description: `${inProgressOrders + pendingOrders} ordini attivi. Tempo medio completamento: ${avgCompletionTime} giorni. Pianifica risorse per gestione ottimale del workflow.`,
+                            confidence: 88
+                        });
+                    }
+                }
+                
                 // Revenue prediction based on historical data
                 const revenues = transactions.filter(t => t.type === 'revenue');
-                const avgRevenue = revenues.reduce((sum, t) => sum + parseFloat(t.amount), 0) / revenues.length;
-                const trendMultiplier = revenues.length > 5 ? 1.15 : 1.08;
-                
-                predictions.push({
-                    title: "📈 Proiezione Ricavi",
-                    description: `Basandomi sui pattern recenti, prevedo ricavi medi di ${formatCurrency(avgRevenue * trendMultiplier)} per i prossimi ordini (+${Math.round((trendMultiplier - 1) * 100)}%).`,
-                    confidence: Math.min(78 + revenues.length * 2, 95)
-                });
+                if (revenues.length > 2) {
+                    const avgRevenue = revenues.reduce((sum, t) => sum + parseFloat(t.amount), 0) / revenues.length;
+                    const trendMultiplier = revenues.length > 5 ? 1.15 : 1.08;
+                    
+                    predictions.push({
+                        title: "📈 Proiezione Ricavi",
+                        description: `Basandomi sui pattern recenti, prevedo ricavi medi di ${formatCurrency(avgRevenue * trendMultiplier)} per i prossimi ordini (+${Math.round((trendMultiplier - 1) * 100)}%).`,
+                        confidence: Math.min(78 + revenues.length * 2, 95)
+                    });
+                }
                 
                 // Client growth prediction
                 if (clients.length > 2) {
@@ -2402,6 +3079,10 @@
             addTransaction('revenue');
         }
         
+        function openQuickOrder() {
+            addOrder();
+        }
+        
         function openQuickClient() {
             addClient();
         }
@@ -2420,6 +3101,7 @@
                         totalTransactions: appData.transactions.length,
                         totalClients: appData.clients.length,
                         totalInventoryItems: appData.inventory.length,
+                        totalOrders: appData.orders.length,
                         exportedBy: 'RetroAvia Spider-System'
                     }
                 };
@@ -2526,9 +3208,15 @@
         
         // ===== SEARCH FUNCTIONALITY =====
         function setupSearchListeners() {
+            const orderSearch = document.getElementById('orderSearch');
             const transactionSearch = document.getElementById('transactionSearch');
             const clientSearch = document.getElementById('clientSearch');
             const inventorySearch = document.getElementById('inventorySearch');
+            
+            if (orderSearch) {
+                orderSearch.removeEventListener('input', debouncedFilterOrders);
+                orderSearch.addEventListener('input', debouncedFilterOrders);
+            }
             
             if (transactionSearch) {
                 transactionSearch.removeEventListener('input', debouncedFilterTransactions);
@@ -2571,6 +3259,7 @@
                         ...appData,
                         ...parsedData,
                         // Ensure arrays exist
+                        orders: parsedData.orders || appData.orders,
                         transactions: parsedData.transactions || appData.transactions,
                         clients: parsedData.clients || appData.clients,
                         inventory: parsedData.inventory || appData.inventory
@@ -2620,7 +3309,7 @@
                 
                 // Show version info
                 console.log(`✅ RetroAvia ${appData.version} Ready!`);
-                console.log(`📊 Dati caricati: ${appData.transactions.length} transazioni, ${appData.clients.length} clienti, ${appData.inventory.length} componenti`);
+                console.log(`📊 Dati caricati: ${appData.orders.length} ordini, ${appData.transactions.length} transazioni, ${appData.clients.length} clienti, ${appData.inventory.length} componenti`);
                 
                 showMessage('🕷️ RetroAvia 3.1 Spider-System Attivato!');
                 
@@ -2662,20 +3351,26 @@
                     showPage('dashboard');
                     break;
                 case '2':
-                    showPage('transactions');
+                    showPage('orders');
                     break;
                 case '3':
-                    showPage('clients');
+                    showPage('transactions');
                     break;
                 case '4':
-                    showPage('inventory');
+                    showPage('clients');
                     break;
                 case '5':
+                    showPage('inventory');
+                    break;
+                case '6':
                     showPage('analytics');
                     break;
                 case 'n':
                 case 'N':
-                    if (appData.currentPage === 'transactions') {
+                    if (appData.currentPage === 'orders') {
+                        event.preventDefault();
+                        addOrder();
+                    } else if (appData.currentPage === 'transactions') {
                         event.preventDefault();
                         addTransaction('revenue');
                     } else if (appData.currentPage === 'clients') {
@@ -2768,6 +3463,7 @@
         // ===== FINAL SETUP =====
         console.log('🕷️ RetroAvia 3.1 Spider-System Loaded Successfully!');
         console.log('📋 Miglioramenti Versione 3.1:');
+        console.log('  ✅ Nuova sezione Ordini per gestire commesse personalizzate');
         console.log('  ✅ Analytics con dati reali delle transazioni');
         console.log('  ✅ Debounce per le ricerche (performance migliorata)');
         console.log('  ✅ Validazione input avanzata');
@@ -2776,9 +3472,10 @@
         console.log('  ✅ Auto-salvataggio ogni 5 minuti');
         console.log('  ✅ Backup con metadata');
         console.log('  ✅ KPI dashboard completo');
+        console.log('  ✅ AI integrata per analisi ordini');
         console.log('');
         console.log('📋 Keyboard Shortcuts:');
-        console.log('  1-5: Navigate pages');
+        console.log('  1-6: Navigate pages');
         console.log('  N: New item (context-dependent)');
         console.log('  A: AI Analysis (on dashboard)');
         console.log('  Ctrl+S: Manual save');
