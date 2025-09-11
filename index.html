@@ -2384,6 +2384,68 @@
             }, 100);
         }
 
+        // ===== ENHANCED SYNC FUNCTIONS =====
+        async function syncData() {
+            try {
+                if (!appData.connected) {
+                    showMessage('Nessuna connessione a Supabase', 'error');
+                    return;
+                }
+
+                showMessage('🔄 Sincronizzazione in corso...');
+                console.log('🔄 Inizio sincronizzazione completa...');
+
+                // Load all data from Supabase with individual error handling
+                const results = await Promise.allSettled([
+                    loadFromSupabase('orders'),
+                    loadFromSupabase('transactions'),
+                    loadFromSupabase('clients'),
+                    loadFromSupabase('inventory')
+                ]);
+
+                // Process results with fallback to current data
+                const newOrders = results[0].status === 'fulfilled' ? results[0].value : appData.orders;
+                const newTransactions = results[1].status === 'fulfilled' ? results[1].value : appData.transactions;
+                const newClients = results[2].status === 'fulfilled' ? results[2].value : appData.clients;
+                const newInventory = results[3].status === 'fulfilled' ? results[3].value : appData.inventory;
+
+                // Only update if we got valid data
+                if (Array.isArray(newOrders)) appData.orders = newOrders;
+                if (Array.isArray(newTransactions)) appData.transactions = newTransactions;
+                if (Array.isArray(newClients)) appData.clients = newClients;
+                if (Array.isArray(newInventory)) appData.inventory = newInventory;
+
+                // Check for any failures
+                const failures = results.filter(r => r.status === 'rejected');
+                if (failures.length > 0) {
+                    console.warn('⚠️ Alcune sincronizzazioni fallite:', failures);
+                    showMessage(`Sincronizzazione parziale (${failures.length} errori)`, 'error');
+                } else {
+                    showMessage('✅ Sincronizzazione cloud completata!');
+                }
+
+                // Always save to localStorage as backup
+                saveDataToLocalStorage();
+                updateClientTotalSpent();
+
+                // Refresh current page
+                showPage(appData.currentPage);
+                updateDashboard();
+
+                console.log('📊 Dati sincronizzati:', {
+                    orders: appData.orders.length,
+                    transactions: appData.transactions.length,
+                    clients: appData.clients.length,
+                    inventory: appData.inventory.length
+                });
+
+            } catch (error) {
+                console.error('💥 Errore sincronizzazione:', error);
+                showMessage('Errore nella sincronizzazione', 'error');
+            }
+        }
+
+        // Enhanced save functions with better error handling
         async function saveOrderFromForm() {
             try {
                 const saveBtn = document.getElementById('saveOrderBtn');
@@ -2457,55 +2519,37 @@
                     dueDate: dueDate
                 };
                 
+                // Save locally first
                 if (appData.editingId) {
                     const index = appData.orders.findIndex(o => o.id === appData.editingId);
                     if (index !== -1) {
                         appData.orders[index] = formData;
-                        
-                        // Try to save to Supabase, but continue if it fails
-                        if (appData.connected) {
-                            try {
-                                await saveToSupabase('orders', formData);
-                                showMessage('Ordine aggiornato e sincronizzato!');
-                            } catch (error) {
-                                console.warn('Supabase save failed:', error);
-                                showMessage('Ordine aggiornato localmente (sync fallito)', 'error');
-                            }
-                        } else {
-                            showMessage('Ordine aggiornato (modalità offline)');
-                        }
-                        
-                        console.log('Order updated:', formData);
                     }
                     appData.editingId = null;
                 } else {
                     appData.orders.push(formData);
-                    
-                    // Try to save to Supabase, but continue if it fails
-                    if (appData.connected) {
-                        try {
-                            await saveToSupabase('orders', formData);
-                            showMessage('Ordine aggiunto e sincronizzato!');
-                        } catch (error) {
-                            console.warn('Supabase save failed:', error);
-                            showMessage('Ordine aggiunto localmente (sync fallito)', 'error');
-                        }
-                    } else {
-                        showMessage('Ordine aggiunto (modalità offline)');
-                    }
-                    
-                    console.log('Order added:', formData);
                 }
                 
-                // Always save to localStorage as backup
                 saveDataToLocalStorage();
+                
+                // Try to save to Supabase
+                if (appData.connected) {
+                    try {
+                        await saveToSupabase('orders', formData);
+                        showMessage('✅ Ordine salvato su cloud!');
+                    } catch (error) {
+                        console.warn('⚠️ Supabase save failed:', error);
+                        showMessage('✅ Ordine salvato localmente (sync cloud fallito)', 'error');
+                    }
+                } else {
+                    showMessage('✅ Ordine salvato localmente');
+                }
                 
                 hideLoading(saveBtn, originalText);
                 closeModal();
                 loadOrders();
                 updateDashboard();
                 
-                // Refresh calendar if we're on that page
                 if (appData.currentPage === 'calendar') {
                     renderCalendar();
                 }
