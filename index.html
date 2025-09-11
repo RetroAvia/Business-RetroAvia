@@ -4613,17 +4613,25 @@
             saveDataToLocalStorage();
         });
         
-        // Auto-save every 5 minutes
+        // Auto-save every 2 minutes AND on every data change
         setInterval(() => {
+            console.log('🔄 Auto-save schedulato...');
+            saveDataToLocalStorage();
+            
             if (appData.connected) {
                 console.log('🔄 Auto-sync in corso...');
                 syncData().catch(error => {
                     console.warn('❌ Auto-sync fallito:', error);
                 });
-            } else {
-                saveDataToLocalStorage();
             }
-        }, 5 * 60 * 1000);
+        }, 2 * 60 * 1000); // Every 2 minutes
+        
+        // Force save on every interaction
+        function forceSave() {
+            setTimeout(() => {
+                saveDataToLocalStorage();
+            }, 100);
+        }
         
         // ===== RESPONSIVE HELPERS =====
         function handleResize() {
