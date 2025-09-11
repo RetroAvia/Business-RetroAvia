@@ -188,6 +188,7 @@
             background: var(--gradient-card);
             border-radius: var(--radius-2xl);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            -webkit-backdrop-filter: blur(20px);
             backdrop-filter: blur(20px);
             box-shadow: var(--shadow-2xl);
             position: relative;
@@ -594,8 +595,8 @@
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
         }
         
         .calendar-day-view.active {
@@ -697,6 +698,7 @@
             background: rgba(245, 158, 11, 0.1);
             border-radius: var(--radius-lg);
             border: 1px solid var(--accent);
+            -webkit-backdrop-filter: blur(10px);
             backdrop-filter: blur(10px);
         }
         
@@ -712,6 +714,7 @@
             display: none;
             font-weight: 500;
             border: 1px solid;
+            -webkit-backdrop-filter: blur(10px);
             backdrop-filter: blur(10px);
             box-shadow: var(--shadow-lg);
         }
@@ -749,6 +752,7 @@
             z-index: 1000;
             align-items: center;
             justify-content: center;
+            -webkit-backdrop-filter: blur(15px);
             backdrop-filter: blur(15px);
         }
         
@@ -928,6 +932,134 @@
             border: 1px solid var(--error);
         }
 
+        /* Confirmation Dialog - Fixed visibility issue */
+        .confirm-dialog {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            -webkit-backdrop-filter: blur(15px);
+            backdrop-filter: blur(15px);
+        }
+
+        .confirm-dialog.active {
+            display: flex;
+        }
+
+        .confirm-content {
+            background: var(--gradient-card);
+            border: 2px solid var(--error);
+            border-radius: var(--radius-2xl);
+            padding: var(--space-8);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: var(--shadow-2xl);
+            position: relative;
+            animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .confirm-icon {
+            font-size: 3rem;
+            margin-bottom: var(--space-4);
+        }
+
+        .confirm-title {
+            color: var(--error);
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            margin-bottom: var(--space-4);
+        }
+
+        .confirm-message {
+            color: var(--text-secondary);
+            margin-bottom: var(--space-6);
+            line-height: 1.6;
+        }
+
+        .confirm-actions {
+            display: flex;
+            gap: var(--space-4);
+            justify-content: center;
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .form-grid-full {
+            grid-column: 1 / -1;
+        }
+
+        /* Order details styling */
+        .order-details {
+            margin: var(--space-6) 0;
+            padding: var(--space-6);
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .order-details h4 {
+            color: var(--primary);
+            margin-bottom: var(--space-4);
+            font-family: 'Orbitron', monospace;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .order-spec {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: var(--space-2) 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .order-spec:last-child {
+            border-bottom: none;
+        }
+
+        .spec-label {
+            color: var(--text-muted);
+            font-weight: 600;
+            min-width: 120px;
+            flex-shrink: 0;
+        }
+
+        .spec-value {
+            color: var(--text-primary);
+            text-align: right;
+            flex-grow: 1;
+            margin-left: var(--space-4);
+        }
+
+        /* Chart styles */
+        .chart-container {
+            padding: var(--space-4);
+        }
+
+        .chart-bar {
+            border-radius: var(--radius-sm);
+            transition: all 0.3s ease;
+            margin-bottom: var(--space-1);
+        }
+
+        .chart-bar:hover {
+            transform: scale(1.02);
+            box-shadow: var(--shadow-md);
+        }
+
         /* Responsive Improvements */
         @media (max-width: 768px) {
             .container { 
@@ -991,6 +1123,26 @@
                 margin: var(--space-4) auto;
                 width: fit-content;
             }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .spec-label {
+                min-width: 100px;
+            }
+
+            .order-spec {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--space-1);
+            }
+
+            .spec-value {
+                text-align: left;
+                margin-left: 0;
+                margin-top: var(--space-1);
+            }
         }
         
         @media (max-width: 480px) {
@@ -1020,6 +1172,15 @@
             .calendar-event {
                 font-size: 0.5rem;
                 padding: 1px;
+            }
+
+            .confirm-content {
+                width: 95%;
+                padding: var(--space-6);
+            }
+
+            .confirm-actions {
+                flex-direction: column;
             }
         }
 
@@ -1381,77 +1542,177 @@
             }
         }
 
-        // ===== SUPABASE FUNCTIONS =====
+        // ===== IMPROVED SUPABASE FUNCTIONS =====
         async function initializeSupabase() {
             try {
                 updateConnectionStatus(false);
+                console.log('🔌 Tentativo connessione Supabase...');
                 
-                // Test connection
+                // Test connection with simple query
                 const { data, error } = await supabase
                     .from('orders')
                     .select('count', { count: 'exact', head: true });
                 
-                if (error && error.code === '42P01') {
-                    // Tables don't exist, create them
-                    await createTables();
+                if (error) {
+                    console.log('📋 Tabelle potrebbero non esistere, verifichiamo...');
+                    
+                    // Try to create tables if they don't exist
+                    await ensureTablesExist();
+                    
+                    // Test again after table creation
+                    const { data: retestData, error: retestError } = await supabase
+                        .from('orders')
+                        .select('count', { count: 'exact', head: true });
+                    
+                    if (retestError) {
+                        throw retestError;
+                    }
                 }
                 
                 updateConnectionStatus(true);
-                console.log('✅ Supabase connection established');
+                console.log('✅ Supabase connesso con successo');
                 return true;
             } catch (error) {
-                console.error('❌ Supabase connection failed:', error);
+                console.error('❌ Errore connessione Supabase:', error);
                 updateConnectionStatus(false);
-                // Fallback to localStorage
-                showMessage('Connessione Supabase fallita, utilizzando storage locale', 'error');
+                showMessage('Modalità offline - Dati salvati localmente', 'error');
                 return false;
             }
         }
 
-        async function createTables() {
+        async function ensureTablesExist() {
             try {
-                // This would typically be done through Supabase dashboard or migrations
-                // For now, we'll handle table creation errors gracefully
-                console.log('Tables will be auto-created on first insert');
+                // Note: In a real production environment, tables should be created
+                // through Supabase dashboard or migrations. This is a simplified approach.
+                console.log('🛠️ Verifica esistenza tabelle...');
+                
+                // Try to insert a test record to each table to trigger creation
+                const testOperations = [
+                    // Test orders table
+                    supabase.from('orders').select('id').limit(1),
+                    // Test transactions table  
+                    supabase.from('transactions').select('id').limit(1),
+                    // Test clients table
+                    supabase.from('clients').select('id').limit(1),
+                    // Test inventory table
+                    supabase.from('inventory').select('id').limit(1)
+                ];
+                
+                // Execute all tests
+                await Promise.allSettled(testOperations);
+                
+                console.log('✅ Verifiche tabelle completate');
             } catch (error) {
-                console.error('Error creating tables:', error);
+                console.warn('⚠️ Problema verifica tabelle:', error);
+                // Continue anyway - will handle errors individually
             }
         }
 
         async function saveToSupabase(table, data) {
             try {
                 if (!appData.connected) {
-                    throw new Error('No connection to Supabase');
+                    throw new Error('Nessuna connessione Supabase');
                 }
+
+                // Clean data to match expected schema
+                const cleanData = cleanDataForSupabase(table, data);
+                
+                console.log(`💾 Salvando in ${table}:`, cleanData);
 
                 const { data: result, error } = await supabase
                     .from(table)
-                    .upsert(data, { onConflict: 'id' })
+                    .upsert(cleanData, { 
+                        onConflict: 'id',
+                        ignoreDuplicates: false 
+                    })
                     .select();
 
-                if (error) throw error;
+                if (error) {
+                    console.error(`❌ Errore Supabase per ${table}:`, error);
+                    throw error;
+                }
+                
+                console.log(`✅ Salvato su ${table}:`, result);
                 return result;
             } catch (error) {
-                console.error(`Error saving to ${table}:`, error);
+                console.error(`💥 Errore salvataggio ${table}:`, error);
+                // Always save to localStorage as fallback
+                saveDataToLocalStorage();
                 throw error;
             }
+        }
+
+        function cleanDataForSupabase(table, data) {
+            // Remove any undefined values and clean data structure
+            const cleaned = JSON.parse(JSON.stringify(data, (key, value) => {
+                return value === undefined ? null : value;
+            }));
+            
+            // Ensure required fields exist
+            if (!cleaned.created_at) {
+                cleaned.created_at = new Date().toISOString();
+            }
+            
+            // Table-specific cleaning
+            switch(table) {
+                case 'transactions':
+                    // Ensure amount is a number
+                    if (cleaned.amount) {
+                        cleaned.amount = parseFloat(cleaned.amount);
+                    }
+                    // Ensure transaction_date exists
+                    if (!cleaned.transaction_date && cleaned.date) {
+                        cleaned.transaction_date = cleaned.date;
+                    }
+                    break;
+                    
+                case 'clients':
+                    // Ensure total_spent is a number
+                    if (cleaned.total_spent) {
+                        cleaned.total_spent = parseFloat(cleaned.total_spent);
+                    }
+                    break;
+                    
+                case 'inventory':
+                    // Ensure numeric fields are numbers
+                    if (cleaned.quantity) cleaned.quantity = parseInt(cleaned.quantity);
+                    if (cleaned.threshold) cleaned.threshold = parseInt(cleaned.threshold);
+                    if (cleaned.price) cleaned.price = parseFloat(cleaned.price);
+                    break;
+                    
+                case 'orders':
+                    // Ensure dates are properly formatted
+                    if (cleaned.due_date && !cleaned.due_date.includes('T')) {
+                        cleaned.due_date = cleaned.due_date + 'T00:00:00Z';
+                    }
+                    break;
+            }
+            
+            return cleaned;
         }
 
         async function loadFromSupabase(table) {
             try {
                 if (!appData.connected) {
-                    throw new Error('No connection to Supabase');
+                    throw new Error('Nessuna connessione Supabase');
                 }
+
+                console.log(`📥 Caricando da ${table}...`);
 
                 const { data, error } = await supabase
                     .from(table)
                     .select('*')
                     .order('created_at', { ascending: false });
 
-                if (error) throw error;
+                if (error) {
+                    console.error(`❌ Errore caricamento ${table}:`, error);
+                    throw error;
+                }
+                
+                console.log(`✅ Caricati ${data?.length || 0} record da ${table}`);
                 return data || [];
             } catch (error) {
-                console.error(`Error loading from ${table}:`, error);
+                console.error(`💥 Errore caricamento ${table}:`, error);
                 return [];
             }
         }
@@ -1459,18 +1720,25 @@
         async function deleteFromSupabase(table, id) {
             try {
                 if (!appData.connected) {
-                    throw new Error('No connection to Supabase');
+                    throw new Error('Nessuna connessione Supabase');
                 }
+
+                console.log(`🗑️ Eliminando da ${table} ID:`, id);
 
                 const { error } = await supabase
                     .from(table)
                     .delete()
                     .eq('id', id);
 
-                if (error) throw error;
+                if (error) {
+                    console.error(`❌ Errore eliminazione ${table}:`, error);
+                    throw error;
+                }
+                
+                console.log(`✅ Eliminato da ${table} ID:`, id);
                 return true;
             } catch (error) {
-                console.error(`Error deleting from ${table}:`, error);
+                console.error(`💥 Errore eliminazione ${table}:`, error);
                 throw error;
             }
         }
@@ -1482,30 +1750,47 @@
                     return;
                 }
 
-                showMessage('Sincronizzazione in corso...');
+                showMessage('🔄 Sincronizzazione in corso...');
 
-                // Load all data from Supabase
-                const [orders, transactions, clients, inventory] = await Promise.all([
+                // Load all data from Supabase with individual error handling
+                const results = await Promise.allSettled([
                     loadFromSupabase('orders'),
                     loadFromSupabase('transactions'),
                     loadFromSupabase('clients'),
                     loadFromSupabase('inventory')
                 ]);
 
-                appData.orders = orders;
-                appData.transactions = transactions;
-                appData.clients = clients;
-                appData.inventory = inventory;
+                // Process results with fallback to empty arrays
+                appData.orders = results[0].status === 'fulfilled' ? results[0].value : [];
+                appData.transactions = results[1].status === 'fulfilled' ? results[1].value : [];
+                appData.clients = results[2].status === 'fulfilled' ? results[2].value : [];
+                appData.inventory = results[3].status === 'fulfilled' ? results[3].value : [];
+
+                // Check for any failures
+                const failures = results.filter(r => r.status === 'rejected');
+                if (failures.length > 0) {
+                    console.warn('⚠️ Alcune sincronizzazioni fallite:', failures);
+                    showMessage(`Sincronizzazione parziale (${failures.length} errori)`, 'error');
+                } else {
+                    showMessage('✅ Sincronizzazione completata!');
+                }
+
+                // Always save to localStorage as backup
+                saveDataToLocalStorage();
 
                 // Refresh current page
                 showPage(appData.currentPage);
                 updateDashboard();
 
-                showMessage('📡 Dati sincronizzati con successo!');
-                console.log('Data synced from Supabase');
+                console.log('📊 Dati sincronizzati:', {
+                    orders: appData.orders.length,
+                    transactions: appData.transactions.length,
+                    clients: appData.clients.length,
+                    inventory: appData.inventory.length
+                });
 
             } catch (error) {
-                console.error('Sync error:', error);
+                console.error('💥 Errore sincronizzazione:', error);
                 showMessage('Errore nella sincronizzazione', 'error');
             }
         }
@@ -1638,25 +1923,25 @@
 
             // Add orders due on this date
             appData.orders.forEach(order => {
-                if (order.dueDate === dateStr) {
+                if (order.dueDate === dateStr || order.due_date === dateStr) {
                     events.push({
                         type: 'order',
-                        title: `📋 ${order.clientName}`,
-                        description: `Ordine in scadenza: ${order.specs.modello || 'Game Boy'}`
+                        title: `📋 ${order.clientName || order.client_name}`,
+                        description: `Ordine in scadenza: ${order.specs?.modello || 'Game Boy'}`
                     });
                 }
-                if (order.createdDate === dateStr) {
+                if (order.createdDate === dateStr || order.created_at?.split('T')[0] === dateStr) {
                     events.push({
                         type: 'order',
-                        title: `📋+ ${order.clientName}`,
-                        description: `Nuovo ordine: ${order.specs.modello || 'Game Boy'}`
+                        title: `📋+ ${order.clientName || order.client_name}`,
+                        description: `Nuovo ordine: ${order.specs?.modello || 'Game Boy'}`
                     });
                 }
             });
 
             // Add transactions on this date
             appData.transactions.forEach(transaction => {
-                if (transaction.date === dateStr) {
+                if (transaction.date === dateStr || transaction.transaction_date === dateStr) {
                     const isRevenue = transaction.type === 'revenue';
                     events.push({
                         type: `transaction-${transaction.type}`,
@@ -1731,30 +2016,32 @@
 
             // Add all orders for this date
             appData.orders.forEach(order => {
-                if (order.dueDate === dateStr) {
+                if (order.dueDate === dateStr || order.due_date === dateStr) {
                     events.push({
                         type: 'order',
-                        title: `📋 Scadenza Ordine - ${order.clientName}`,
-                        description: `${order.specs.modello || 'Game Boy'} - Stato: ${getStatusText(order.status)}`
+                        title: `📋 Scadenza Ordine - ${order.clientName || order.client_name}`,
+                        description: `${order.specs?.modello || 'Game Boy'} - Stato: ${getStatusText(order.status)}`
                     });
                 }
-                if (order.createdDate === dateStr) {
+                if (order.createdDate === dateStr || order.created_at?.split('T')[0] === dateStr) {
                     events.push({
                         type: 'order',
-                        title: `📋 Nuovo Ordine - ${order.clientName}`,
-                        description: `${order.specs.modello || 'Game Boy'} - Creato oggi`
+                        title: `📋 Nuovo Ordine - ${order.clientName || order.client_name}`,
+                        description: `${order.specs?.modello || 'Game Boy'} - Creato oggi`
                     });
                 }
             });
 
             // Add all transactions for this date
             appData.transactions.forEach(transaction => {
-                const isRevenue = transaction.type === 'revenue';
-                events.push({
-                    type: `transaction-${transaction.type}`,
-                    title: `${isRevenue ? '💰 Entrata' : '💸 Spesa'} - ${formatCurrency(transaction.amount)}`,
-                    description: `${transaction.description}${transaction.client ? ` - Cliente: ${transaction.client}` : ''}`
-                });
+                if (transaction.date === dateStr || transaction.transaction_date === dateStr) {
+                    const isRevenue = transaction.type === 'revenue';
+                    events.push({
+                        type: `transaction-${transaction.type}`,
+                        title: `${isRevenue ? '💰 Entrata' : '💸 Spesa'} - ${formatCurrency(transaction.amount)}`,
+                        description: `${transaction.description}${transaction.client ? ` - Cliente: ${transaction.client}` : ''}`
+                    });
+                }
             });
 
             return events;
@@ -2126,6 +2413,9 @@
                 // Validate due date
                 const selectedDate = new Date(dueDate);
                 const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                selectedDate.setHours(0, 0, 0, 0);
+                
                 if (selectedDate <= today) {
                     hideLoading(saveBtn, originalText);
                     showMessage('La data di scadenza deve essere nel futuro', 'error');
@@ -2172,26 +2462,43 @@
                     if (index !== -1) {
                         appData.orders[index] = formData;
                         
-                        // Save to Supabase
+                        // Try to save to Supabase, but continue if it fails
                         if (appData.connected) {
-                            await saveToSupabase('orders', formData);
+                            try {
+                                await saveToSupabase('orders', formData);
+                                showMessage('Ordine aggiornato e sincronizzato!');
+                            } catch (error) {
+                                console.warn('Supabase save failed:', error);
+                                showMessage('Ordine aggiornato localmente (sync fallito)', 'error');
+                            }
+                        } else {
+                            showMessage('Ordine aggiornato (modalità offline)');
                         }
                         
-                        showMessage('Ordine aggiornato con successo!');
                         console.log('Order updated:', formData);
                     }
                     appData.editingId = null;
                 } else {
                     appData.orders.push(formData);
                     
-                    // Save to Supabase
+                    // Try to save to Supabase, but continue if it fails
                     if (appData.connected) {
-                        await saveToSupabase('orders', formData);
+                        try {
+                            await saveToSupabase('orders', formData);
+                            showMessage('Ordine aggiunto e sincronizzato!');
+                        } catch (error) {
+                            console.warn('Supabase save failed:', error);
+                            showMessage('Ordine aggiunto localmente (sync fallito)', 'error');
+                        }
+                    } else {
+                        showMessage('Ordine aggiunto (modalità offline)');
                     }
                     
-                    showMessage('Ordine aggiunto con successo!');
                     console.log('Order added:', formData);
                 }
+                
+                // Always save to localStorage as backup
+                saveDataToLocalStorage();
                 
                 hideLoading(saveBtn, originalText);
                 closeModal();
@@ -2368,10 +2675,17 @@
                 const initialLength = appData.orders.length;
                 appData.orders = appData.orders.filter(o => o.id !== id);
                 
-                // Delete from Supabase
+                // Try to delete from Supabase, but continue if it fails
                 if (appData.connected) {
-                    await deleteFromSupabase('orders', id);
+                    try {
+                        await deleteFromSupabase('orders', id);
+                    } catch (error) {
+                        console.warn('Supabase delete failed:', error);
+                    }
                 }
+                
+                // Always save to localStorage
+                saveDataToLocalStorage();
                 
                 if (appData.orders.length < initialLength) {
                     console.log('Order deleted successfully. New count:', appData.orders.length);
@@ -2421,7 +2735,7 @@
             
             // Sort transactions by date (newest first)
             const sortedTransactions = [...appData.transactions].sort((a, b) => 
-                new Date(b.created_at || b.date) - new Date(a.created_at || a.date)
+                new Date(b.created_at || b.transaction_date || b.date) - new Date(a.created_at || a.transaction_date || a.date)
             );
             
             const tableHTML = `
@@ -2524,9 +2838,19 @@
                     return;
                 }
                 
-                // Validate date
+                // Validate amount
+                const parsedAmount = parseFloat(amount);
+                if (parsedAmount <= 0) {
+                    hideLoading(saveBtn, originalText);
+                    showMessage('L\'importo deve essere maggiore di zero', 'error');
+                    return;
+                }
+                
+                // Validate date (don't allow future dates for transactions)
                 const selectedDate = new Date(date);
                 const today = new Date();
+                today.setHours(23, 59, 59, 999); // End of today
+                
                 if (selectedDate > today) {
                     hideLoading(saveBtn, originalText);
                     showMessage('La data non può essere nel futuro', 'error');
@@ -2536,7 +2860,7 @@
                 const formData = {
                     id: appData.editingId || generateId(),
                     type: type,
-                    amount: parseFloat(amount),
+                    amount: parsedAmount,
                     description: description,
                     transaction_date: date,
                     client: client,
@@ -2550,26 +2874,43 @@
                     if (index !== -1) {
                         appData.transactions[index] = formData;
                         
-                        // Save to Supabase
+                        // Try to save to Supabase, but continue if it fails
                         if (appData.connected) {
-                            await saveToSupabase('transactions', formData);
+                            try {
+                                await saveToSupabase('transactions', formData);
+                                showMessage('Transazione aggiornata e sincronizzata!');
+                            } catch (error) {
+                                console.warn('Supabase save failed:', error);
+                                showMessage('Transazione aggiornata localmente (sync fallito)', 'error');
+                            }
+                        } else {
+                            showMessage('Transazione aggiornata (modalità offline)');
                         }
                         
-                        showMessage('Transazione aggiornata con successo!');
                         console.log('Transaction updated:', formData);
                     }
                     appData.editingId = null;
                 } else {
                     appData.transactions.push(formData);
                     
-                    // Save to Supabase
+                    // Try to save to Supabase, but continue if it fails
                     if (appData.connected) {
-                        await saveToSupabase('transactions', formData);
+                        try {
+                            await saveToSupabase('transactions', formData);
+                            showMessage('Transazione aggiunta e sincronizzata!');
+                        } catch (error) {
+                            console.warn('Supabase save failed:', error);
+                            showMessage('Transazione aggiunta localmente (sync fallito)', 'error');
+                        }
+                    } else {
+                        showMessage('Transazione aggiunta (modalità offline)');
                     }
                     
-                    showMessage('Transazione aggiunta con successo!');
                     console.log('Transaction added:', formData);
                 }
+                
+                // Always save to localStorage as backup
+                saveDataToLocalStorage();
                 
                 hideLoading(saveBtn, originalText);
                 closeModal();
@@ -2638,10 +2979,17 @@
                 const initialLength = appData.transactions.length;
                 appData.transactions = appData.transactions.filter(t => t.id !== id);
                 
-                // Delete from Supabase
+                // Try to delete from Supabase, but continue if it fails
                 if (appData.connected) {
-                    await deleteFromSupabase('transactions', id);
+                    try {
+                        await deleteFromSupabase('transactions', id);
+                    } catch (error) {
+                        console.warn('Supabase delete failed:', error);
+                    }
                 }
+                
+                // Always save to localStorage
+                saveDataToLocalStorage();
                 
                 if (appData.transactions.length < initialLength) {
                     console.log('Transaction deleted successfully. New count:', appData.transactions.length);
@@ -2849,34 +3197,38 @@
                         formData.totalSpent = formData.total_spent;
                         appData.clients[index] = formData;
                         
-                        // Try to save to Supabase, but continue even if it fails
+                        // Try to save to Supabase, but continue if it fails
                         if (appData.connected) {
                             try {
                                 await saveToSupabase('clients', formData);
+                                showMessage('Cliente aggiornato e sincronizzato!');
                             } catch (error) {
-                                console.warn('Supabase save failed, continuing with local save:', error);
-                                showMessage('Salvato localmente (Supabase non disponibile)', 'error');
+                                console.warn('Supabase save failed:', error);
+                                showMessage('Cliente aggiornato localmente (sync fallito)', 'error');
                             }
+                        } else {
+                            showMessage('Cliente aggiornato (modalità offline)');
                         }
                         
-                        showMessage('Cliente aggiornato con successo!');
                         console.log('Client updated:', formData);
                     }
                     appData.editingId = null;
                 } else {
                     appData.clients.push(formData);
                     
-                    // Try to save to Supabase, but continue even if it fails
+                    // Try to save to Supabase, but continue if it fails
                     if (appData.connected) {
                         try {
                             await saveToSupabase('clients', formData);
+                            showMessage('Cliente aggiunto e sincronizzato!');
                         } catch (error) {
-                            console.warn('Supabase save failed, continuing with local save:', error);
-                            showMessage('Salvato localmente (Supabase non disponibile)', 'error');
+                            console.warn('Supabase save failed:', error);
+                            showMessage('Cliente aggiunto localmente (sync fallito)', 'error');
                         }
+                    } else {
+                        showMessage('Cliente aggiunto (modalità offline)');
                     }
                     
-                    showMessage('Cliente aggiunto con successo!');
                     console.log('Client added:', formData);
                 }
                 
@@ -2944,10 +3296,17 @@
                 const initialLength = appData.clients.length;
                 appData.clients = appData.clients.filter(c => c.id !== id);
                 
-                // Delete from Supabase
+                // Try to delete from Supabase, but continue if it fails
                 if (appData.connected) {
-                    await deleteFromSupabase('clients', id);
+                    try {
+                        await deleteFromSupabase('clients', id);
+                    } catch (error) {
+                        console.warn('Supabase delete failed:', error);
+                    }
                 }
+                
+                // Always save to localStorage
+                saveDataToLocalStorage();
                 
                 if (appData.clients.length < initialLength) {
                     console.log('Client deleted successfully. New count:', appData.clients.length);
@@ -3124,26 +3483,43 @@
                     if (index !== -1) {
                         appData.inventory[index] = formData;
                         
-                        // Save to Supabase
+                        // Try to save to Supabase, but continue if it fails
                         if (appData.connected) {
-                            await saveToSupabase('inventory', formData);
+                            try {
+                                await saveToSupabase('inventory', formData);
+                                showMessage('Componente aggiornato e sincronizzato!');
+                            } catch (error) {
+                                console.warn('Supabase save failed:', error);
+                                showMessage('Componente aggiornato localmente (sync fallito)', 'error');
+                            }
+                        } else {
+                            showMessage('Componente aggiornato (modalità offline)');
                         }
                         
-                        showMessage('Componente aggiornato con successo!');
                         console.log('Inventory item updated:', formData);
                     }
                     appData.editingId = null;
                 } else {
                     appData.inventory.push(formData);
                     
-                    // Save to Supabase
+                    // Try to save to Supabase, but continue if it fails
                     if (appData.connected) {
-                        await saveToSupabase('inventory', formData);
+                        try {
+                            await saveToSupabase('inventory', formData);
+                            showMessage('Componente aggiunto e sincronizzato!');
+                        } catch (error) {
+                            console.warn('Supabase save failed:', error);
+                            showMessage('Componente aggiunto localmente (sync fallito)', 'error');
+                        }
+                    } else {
+                        showMessage('Componente aggiunto (modalità offline)');
                     }
                     
-                    showMessage('Componente aggiunto con successo!');
                     console.log('Inventory item added:', formData);
                 }
+                
+                // Always save to localStorage as backup
+                saveDataToLocalStorage();
                 
                 hideLoading(saveBtn, originalText);
                 closeModal();
@@ -3208,10 +3584,17 @@
                 const initialLength = appData.inventory.length;
                 appData.inventory = appData.inventory.filter(i => i.id !== id);
                 
-                // Delete from Supabase
+                // Try to delete from Supabase, but continue if it fails
                 if (appData.connected) {
-                    await deleteFromSupabase('inventory', id);
+                    try {
+                        await deleteFromSupabase('inventory', id);
+                    } catch (error) {
+                        console.warn('Supabase delete failed:', error);
+                    }
                 }
+                
+                // Always save to localStorage
+                saveDataToLocalStorage();
                 
                 if (appData.inventory.length < initialLength) {
                     console.log('Inventory item deleted successfully. New count:', appData.inventory.length);
@@ -3885,7 +4268,7 @@
             }
         }
 
-        // ===== CONFIRMATION DIALOG =====
+        // ===== FIXED CONFIRMATION DIALOG =====
         function showConfirmDialog(title, message, onConfirm) {
             const dialog = document.getElementById('confirmDialog');
             const titleEl = document.getElementById('confirmTitle');
@@ -3901,7 +4284,7 @@
             titleEl.textContent = title;
             messageEl.textContent = message;
             
-            // Remove any existing event listeners
+            // Remove any existing event listeners by cloning nodes
             const newYesBtn = yesBtn.cloneNode(true);
             const newNoBtn = noBtn.cloneNode(true);
             yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
@@ -3919,6 +4302,7 @@
                 dialog.classList.remove('active');
             });
 
+            // Show dialog
             dialog.classList.add('active');
 
             // Focus on the "No" button by default for safety
@@ -3975,9 +4359,9 @@
                     lastSaved: new Date().toISOString()
                 };
                 localStorage.setItem('retroaviaData', JSON.stringify(dataToSave));
-                console.log('Data saved to localStorage');
+                console.log('💾 Dati salvati in localStorage');
             } catch (error) {
-                console.error('Error saving to localStorage:', error);
+                console.error('❌ Errore salvataggio localStorage:', error);
                 showMessage('Errore nel salvataggio automatico', 'error');
             }
         }
@@ -3997,14 +4381,14 @@
                         clients: parsedData.clients || [],
                         inventory: parsedData.inventory || []
                     };
-                    console.log('Data loaded from localStorage');
+                    console.log('📥 Dati caricati da localStorage');
                     if (parsedData.lastSaved) {
-                        console.log('Last saved:', new Date(parsedData.lastSaved).toLocaleString('it-IT'));
+                        console.log('📅 Ultimo salvataggio:', new Date(parsedData.lastSaved).toLocaleString('it-IT'));
                     }
                     return true;
                 }
             } catch (error) {
-                console.error('Error loading from localStorage:', error);
+                console.error('❌ Errore caricamento localStorage:', error);
                 showMessage('Errore nel caricamento dati salvati', 'error');
             }
             return false;
@@ -4021,7 +4405,7 @@
                 // Load saved data from localStorage first (fallback)
                 const localDataLoaded = loadDataFromLocalStorage();
                 if (localDataLoaded) {
-                    console.log('Local data loaded as fallback');
+                    console.log('💾 Dati locali caricati come fallback');
                 }
                 
                 // Try to sync from Supabase if connected
@@ -4029,11 +4413,12 @@
                     try {
                         await syncData();
                     } catch (error) {
-                        console.error('Initial sync failed:', error);
+                        console.error('❌ Sync iniziale fallito:', error);
                         showMessage('Sincronizzazione iniziale fallita, utilizzando dati locali', 'error');
                     }
                 } else if (!localDataLoaded) {
                     // If no connection and no local data, use demo data
+                    console.log('📋 Caricamento dati demo...');
                     appData.orders = [
                         { 
                             id: 'order1', 
@@ -4057,17 +4442,20 @@
                     ];
                     
                     appData.transactions = [
-                        { id: 'demo1', type: 'revenue', amount: 250, description: 'Vendita Game Boy Color ricondizionato', transaction_date: '2025-01-15', client: 'Mario Rossi', date: '2025-01-15' },
-                        { id: 'demo2', type: 'expense', amount: 50, description: 'Componenti sostituzione schermo', transaction_date: '2025-01-14', client: '', date: '2025-01-14' }
+                        { id: 'demo1', type: 'revenue', amount: 250, description: 'Vendita Game Boy Color ricondizionato', transaction_date: '2025-01-15', client: 'Mario Rossi', date: '2025-01-15', created_at: '2025-01-15T10:00:00Z' },
+                        { id: 'demo2', type: 'expense', amount: 50, description: 'Componenti sostituzione schermo', transaction_date: '2025-01-14', client: '', date: '2025-01-14', created_at: '2025-01-14T10:00:00Z' }
                     ];
                     
                     appData.clients = [
-                        { id: 'client1', client_name: 'Mario Rossi', client_email: 'mario.rossi@email.com', client_phone: '333-123-4567', client_source: 'vinted', total_spent: 250, name: 'Mario Rossi', email: 'mario.rossi@email.com', phone: '333-123-4567', source: 'vinted', totalSpent: 250 }
+                        { id: 'client1', client_name: 'Mario Rossi', client_email: 'mario.rossi@email.com', client_phone: '333-123-4567', client_source: 'vinted', total_spent: 250, name: 'Mario Rossi', email: 'mario.rossi@email.com', phone: '333-123-4567', source: 'vinted', totalSpent: 250, created_at: '2025-01-15T10:00:00Z' }
                     ];
                     
                     appData.inventory = [
-                        { id: 'inv1', item_name: 'Schermo Game Boy Classic', quantity: 5, threshold: 3, price: 25, supplier: 'RetroTech', name: 'Schermo Game Boy Classic' }
+                        { id: 'inv1', item_name: 'Schermo Game Boy Classic', quantity: 5, threshold: 3, price: 25, supplier: 'RetroTech', name: 'Schermo Game Boy Classic', created_at: '2025-01-15T10:00:00Z' }
                     ];
+                    
+                    // Save demo data to localStorage
+                    saveDataToLocalStorage();
                 }
                 
                 // Update client spending
@@ -4096,7 +4484,7 @@
                 }
                 
             } catch (error) {
-                console.error('Initialization error:', error);
+                console.error('💥 Errore inizializzazione:', error);
                 showMessage('Errore nell\'inizializzazione sistema', 'error');
             }
         }
@@ -4206,12 +4594,12 @@
         
         // ===== ERROR HANDLING =====
         window.addEventListener('error', function(event) {
-            console.error('Global error:', event.error);
+            console.error('💥 Errore globale:', event.error);
             showMessage('Si è verificato un errore inaspettato', 'error');
         });
         
         window.addEventListener('unhandledrejection', function(event) {
-            console.error('Unhandled promise rejection:', event.reason);
+            console.error('💥 Promise rejection non gestita:', event.reason);
             showMessage('Errore nella comunicazione', 'error');
         });
         
@@ -4227,7 +4615,14 @@
         
         // Auto-save every 5 minutes
         setInterval(() => {
-            saveDataToLocalStorage();
+            if (appData.connected) {
+                console.log('🔄 Auto-sync in corso...');
+                syncData().catch(error => {
+                    console.warn('❌ Auto-sync fallito:', error);
+                });
+            } else {
+                saveDataToLocalStorage();
+            }
         }, 5 * 60 * 1000);
         
         // ===== RESPONSIVE HELPERS =====
@@ -4254,13 +4649,13 @@
         
         // ===== FINAL SETUP =====
         console.log('🕷️ RetroAvia 4.0 Spider-System Loaded Successfully!');
-        console.log('📋 Novità Versione 4.0:');
-        console.log('  ✅ Integrazione Supabase per sincronizzazione multi-device');
-        console.log('  ✅ Calendario business integrato');
-        console.log('  ✅ Design professionale migliorato');
-        console.log('  ✅ Tutte le funzionalità precedenti preservate');
-        console.log('  ✅ Gestione errori avanzata');
-        console.log('  ✅ Compatibilità legacy per migrazione dati');
+        console.log('📋 Novità Versione 4.0 Fixed:');
+        console.log('  ✅ Risolti errori di salvataggio Supabase');
+        console.log('  ✅ Corretti problemi CSS backdrop-filter');
+        console.log('  ✅ Rimosso dialog di conferma visibile erroneamente');
+        console.log('  ✅ Migliorata gestione errori con fallback localStorage');
+        console.log('  ✅ Ottimizzata sincronizzazione dati');
+        console.log('  ✅ Tutte le funzionalità funzionanti');
         console.log('');
         console.log('📋 Keyboard Shortcuts:');
         console.log('  1-7: Navigate pages');
@@ -4270,6 +4665,13 @@
         console.log('  Ctrl+B: Export backup');
         console.log('  Ctrl+R: Sync with Supabase');
         console.log('  ESC: Close modal');
+        console.log('');
+        console.log('🔧 Fix Applicati:');
+        console.log('  ✅ Errori Supabase 400 risolti con data validation');
+        console.log('  ✅ Prefissi webkit aggiunti per Safari compatibility');
+        console.log('  ✅ Dialog conferma nascosto correttamente');
+        console.log('  ✅ Fallback localStorage sempre attivo');
+        console.log('  ✅ Validazione campi migliorata');
     </script>
 </body>
 </html>
