@@ -2849,9 +2849,14 @@
                         formData.totalSpent = formData.total_spent;
                         appData.clients[index] = formData;
                         
-                        // Save to Supabase
+                        // Try to save to Supabase, but continue even if it fails
                         if (appData.connected) {
-                            await saveToSupabase('clients', formData);
+                            try {
+                                await saveToSupabase('clients', formData);
+                            } catch (error) {
+                                console.warn('Supabase save failed, continuing with local save:', error);
+                                showMessage('Salvato localmente (Supabase non disponibile)', 'error');
+                            }
                         }
                         
                         showMessage('Cliente aggiornato con successo!');
@@ -2861,14 +2866,22 @@
                 } else {
                     appData.clients.push(formData);
                     
-                    // Save to Supabase
+                    // Try to save to Supabase, but continue even if it fails
                     if (appData.connected) {
-                        await saveToSupabase('clients', formData);
+                        try {
+                            await saveToSupabase('clients', formData);
+                        } catch (error) {
+                            console.warn('Supabase save failed, continuing with local save:', error);
+                            showMessage('Salvato localmente (Supabase non disponibile)', 'error');
+                        }
                     }
                     
                     showMessage('Cliente aggiunto con successo!');
                     console.log('Client added:', formData);
                 }
+                
+                // Always save to localStorage as backup
+                saveDataToLocalStorage();
                 
                 hideLoading(saveBtn, originalText);
                 closeModal();
